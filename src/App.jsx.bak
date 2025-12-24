@@ -1,0 +1,15 @@
+import React from "react";
+import Header from "./components/Header";
+import ComplaintForm from "./components/ComplaintForm";
+import { Toaster } from "react-hot-toast";
+import "./index.css"; // ensure global styles are applied
+
+export default function App() {
+  return (
+    <div className="min-h-screen flex flex-col items-center bg-overlay">
+      <Header />
+      <ComplaintForm />
+      <Toaster position="bottom-right" />
+    </div>
+  );
+}

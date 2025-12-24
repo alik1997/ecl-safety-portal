@@ -1,0 +1,17 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+body {
+  background-image: url('./assets/bg.webp');
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  background-attachment: fixed; /* gives premium feel */
+}
+
+/* transparent overlay for readability */
+.bg-overlay {
+  background-color: rgba(255, 255, 255, 0.75); /* adjust 0.75 opacity */
+  backdrop-filter: blur(2px); /* smooth glass effect */
+}
