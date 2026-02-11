@@ -327,7 +327,7 @@ export default function ComplaintForm() {
     doc.setFont("helvetica", "bold");
     const header = lang === "hi"
       ? "देखे गए असुरक्षित कृत्य / निकट-मिस रिपोर्ट"
-      : "Reporting of Observed Unsafe Act / Near Miss Incident";
+      : "Reporting of Observed Unsafe Act / Near Miss Incident / Safety Suggestion";
     const headerLines = doc.splitTextToSize(header, pageWidth - 80);
     doc.text(headerLines, pageWidth / 2, y, { align: "center" });
     y += headerLines.length * 14 + 10;

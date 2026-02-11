@@ -22,7 +22,7 @@ export default function FrontendPortal() {
   }
 
   function handleLogout() {
-    setUser(null);
+    setUser(null);     
     localStorage.removeItem("ecl_user");
   }
 

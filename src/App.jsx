@@ -1,5 +1,6 @@
 // src/App.jsx
 import React, { useState, useEffect } from "react";
+import { Routes, Route, Navigate } from "react-router-dom";
 
 // assets
 import bg from "./assets/bg.webp";
@@ -9,46 +10,24 @@ import angaara from "./assets/hero.gif";
 // shared components
 import LoginCard from "./components/LoginCard";
 import Topbar from "./components/Topbar";
-import Sidebar from "./components/Sidebar";
 import ActionModal from "./components/ActionModal";
 
-// role-based dashboards
+// pages
+import ComplaintForm from "./pages/ComplaintForm";
+
+// dashboards
 import NodalDashboard from "./dashboards/NodalDashboard";
 import SafetyDashboard from "./dashboards/SafetyDashboard";
 import OversightDashboard from "./dashboards/OversightDashboard";
 
-/* ---------------- Demo users (replace with backend auth later) ---------------- */
+/* ---------------- Demo users ---------------- */
 const USERS = {
   nodal1: { password: "nodalpass", role: "nodal", name: "Nodal Officer (Nodal1)" },
   safety1: { password: "safetypass", role: "safety", name: "Safety Officer A" },
   cmd1: { password: "cmdpass", role: "oversight", name: "CMD - Director" },
 };
 
-/* ---------------- Mock data (replace with API data later) ---------------- */
-const initialResponses = [
-  {
-    id: "R-001",
-    title: "Unsafe stacking at Site A",
-    submittedBy: "Field User 1",
-    date: "2025-12-16",
-    description: "Observed heavy material stacked near a walkway. Risk of collapse.",
-    actionTaken: null,
-    completion: null,
-  },
-  {
-    id: "R-002",
-    title: "Faulty PPE at Unit 3",
-    submittedBy: "Field User 2",
-    date: "2025-12-15",
-    description: "Several workers without proper helmets and gloves.",
-    actionTaken: {
-      text: "Issued immediate PPE replacement and retraining scheduled.",
-      by: "Safety Officer A",
-      date: "2025-12-16",
-    },
-    completion: "Yes",
-  },
-];
+const initialResponses = [];
 
 export default function App() {
   const [user, setUser] = useState(null);
@@ -57,7 +36,6 @@ export default function App() {
   const [actionModalOpen, setActionModalOpen] = useState(false);
   const [activeResponse, setActiveResponse] = useState(null);
 
-  /* ---------- restore login from localStorage ---------- */
   useEffect(() => {
     const raw = localStorage.getItem("ecl_user");
     if (raw) setUser(JSON.parse(raw));
@@ -73,110 +51,92 @@ export default function App() {
     localStorage.removeItem("ecl_user");
   }
 
-  function handleNotifySafety(responseId) {
-    alert(`Notification sent to Safety Department for ${responseId}`);
-    // TODO: API call
-  }
-
-  function handleOpenActionModal(response) {
+  // Helper to open action modal from child dashboards
+  function openActionModalFor(response) {
     setActiveResponse(response);
     setActionModalOpen(true);
   }
 
-  function handleSaveAction(id, text, completion) {
-    const today = new Date().toISOString().slice(0, 10);
-    setResponses((prev) =>
-      prev.map((r) =>
-        r.id === id
-          ? {
-              ...r,
-              actionTaken: { text, by: "Safety Dept", date: today },
-              completion,
-            }
-          : r
-      )
-    );
-    setActionModalOpen(false);
-    setActiveResponse(null);
-  }
+  /* ================= FRONTEND SCREEN ================= */
+  const FrontendScreen = () => {
+    if (!user) {
+      return (
+        <div
+          className="min-h-screen flex items-center justify-center"
+          style={{
+            backgroundImage: `url(${bg})`,
+            backgroundSize: "cover",
+            backgroundPosition: "center",
+          }}
+        >
+          <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
 
-  /* ================= LOGIN PAGE ================= */
-  if (!user) {
-    return (
-      <div
-        className="min-h-screen relative flex items-center justify-center"
-        style={{
-          backgroundImage: `url(${bg})`,
-          backgroundSize: "cover",
-          backgroundPosition: "center",
-        }}
-      >
-        <div className="absolute inset-0 bg-black/55 backdrop-blur-sm" />
-
-        <div className="relative z-10 max-w-5xl w-full px-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center py-20">
-
-            {/* LEFT BRANDING */}
-            <div className="hidden md:flex flex-col text-white">
-              <div className="flex items-center gap-4 mb-6">
-                <img src={logo} className="w-40 object-contain" />
-                
+          <div className="relative z-10 max-w-5xl w-full px-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-center py-20">
+              <div className="hidden md:flex flex-col text-white">
+                <div className="flex items-center gap-4 mb-6">
+                  <img src={logo} className="w-40" alt="logo" />
+                  <img src={angaara} className="w-12 h-12 rounded-full" alt="hero" />
+                </div>
+                <h1 className="text-3xl font-bold">ECL Safety Monitoring Portal</h1>
+                <p className="mt-4 text-lg text-gray-200">
+                  Centralized platform for safety reporting and monitoring.
+                </p>
               </div>
 
-              <h1 className="text-3xl font-bold">ECL Safety Monitoring Portal</h1>
-              <p className="mt-4 text-lg text-gray-200">
-                Centralized platform for safety reporting, action tracking and executive oversight.
-              </p>
+              <LoginCard onLogin={handleLogin} users={USERS} />
             </div>
-
-            {/* LOGIN CARD */}
-            <div className="flex justify-center">
-              <div className="bg-white/90 backdrop-blur-xl rounded-2xl shadow-2xl p-6">
-                <LoginCard onLogin={handleLogin} users={USERS} />
-              </div>
-            </div>
-
           </div>
         </div>
-      </div>
-    );
-  }
+      );
+    }
 
-  /* ================= DASHBOARD LAYOUT ================= */
-  return (
-    <div className="min-h-screen bg-gray-100">
-      <Topbar user={user} onLogout={handleLogout} />
+    return (
+      <div className="min-h-screen bg-gray-100">
+        <Topbar user={user} onLogout={handleLogout} />
 
-      <div className="flex">
-        <Sidebar role={user.role} />
-
-        <main className="flex-1 p-6">
+        {/* Removed global Sidebar: main area becomes full-width. */}
+        <main className="p-6 max-w-screen-xl mx-auto">
           {user.role === "nodal" && (
             <NodalDashboard
               responses={responses}
-              onNotifySafety={handleNotifySafety}
+              onOpenActionModal={(r) => openActionModalFor(r)}
             />
           )}
-
           {user.role === "safety" && (
             <SafetyDashboard
               responses={responses}
-              onOpenActionModal={handleOpenActionModal}
+              onOpenActionModal={(r) => openActionModalFor(r)}
             />
           )}
-
           {user.role === "oversight" && (
-            <OversightDashboard responses={responses} />
+            <OversightDashboard
+              responses={responses}
+              onOpenActionModal={(r) => openActionModalFor(r)}
+            />
           )}
         </main>
-      </div>
 
-      <ActionModal
-        open={actionModalOpen}
-        response={activeResponse}
-        onClose={() => setActionModalOpen(false)}
-        onSave={handleSaveAction}
-      />
-    </div>
+        <ActionModal
+          open={actionModalOpen}
+          response={activeResponse}
+          onClose={() => setActionModalOpen(false)}
+        />
+      </div>
+    );
+  };
+
+  /* ================= ROUTES ================= */
+  return (
+    <Routes>
+      {/* PUBLIC COMPLAINT FORM */}
+      <Route path="/complaintform" element={<ComplaintForm />} />
+
+      {/* LOGIN + DASHBOARD */}
+      <Route path="/" element={<FrontendScreen />} />
+
+      {/* FALLBACK */}
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
